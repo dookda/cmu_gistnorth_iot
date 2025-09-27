@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
     <title>แดชบอร์ด IoT คุณภาพอากาศ DIY</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -282,6 +282,53 @@
             bottom: -6px;
         }
 
+        /* Enhanced navbar collapse animation */
+        .navbar-collapse {
+            transition: all 0.3s ease-in-out;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(11, 18, 32, 0.95);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(30, 42, 68, 0.3);
+                border-radius: 12px;
+                padding: 12px;
+                margin-top: 8px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            }
+
+            [data-theme="light"] .navbar-collapse {
+                background: rgba(255, 255, 255, 0.95);
+                border-color: rgba(226, 232, 240, 0.3);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            }
+
+            .navbar-nav {
+                gap: 8px;
+            }
+
+            .navbar-nav .nav-link {
+                width: 100%;
+                justify-content: flex-start;
+                margin: 0;
+            }
+
+            .d-flex.align-items-center.gap-2 {
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid rgba(30, 42, 68, 0.2);
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px !important;
+            }
+
+            [data-theme="light"] .d-flex.align-items-center.gap-2 {
+                border-top-color: rgba(226, 232, 240, 0.3);
+            }
+        }
+
         .theme-toggle,
         .auth-button {
             background: var(--panel);
@@ -337,6 +384,43 @@
             padding: 14px;
             height: calc(100vh - 80px);
             box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced Responsive Grid Layout */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                padding: 12px;
+            }
+
+            #chart {
+                height: 48vh;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 12px;
+                height: auto;
+                min-height: calc(100vh - 80px);
+            }
+
+            .map-wrap {
+                grid-row: 1;
+                grid-column: 1;
+                height: 50vh;
+                min-height: 300px;
+            }
+
+            #chart {
+                height: 45vh;
+                min-height: 250px;
+            }
         }
 
         .card {
@@ -356,6 +440,20 @@
             height: 100%;
             width: 100%;
             border-radius: 14px;
+            touch-action: manipulation;
+            /* Better mobile touch */
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                border-radius: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #map {
+                border-radius: 8px;
+            }
         }
 
         .map-wrap {
@@ -369,6 +467,48 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             padding: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .stat {
+                padding: 12px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .stat .label {
+                font-size: 13px;
+            }
+
+            .stat .value {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                padding: 8px;
+                gap: 6px;
+            }
+
+            .stat {
+                padding: 10px;
+            }
+
+            .stat .label {
+                font-size: 12px;
+            }
+
+            .stat .value {
+                font-size: 16px;
+            }
         }
 
         .stat {
@@ -410,6 +550,40 @@
             gap: 10px;
             flex-wrap: wrap;
             align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .controls>* {
+                width: 100%;
+                min-height: 44px;
+                /* Better touch targets */
+            }
+
+            .controls label {
+                font-weight: 500;
+                margin-bottom: 4px;
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls {
+                gap: 6px;
+            }
+
+            .controls select,
+            .controls input,
+            .controls button {
+                padding: 12px 16px;
+                font-size: 14px;
+                border-radius: 12px;
+            }
         }
 
         .controls select,
@@ -472,71 +646,240 @@
             margin: 4px 0;
             font-size: 11px;
             opacity: 0.8;
+            line-height: 1.4;
         }
 
-        /* Responsive Navbar Styles */
         @media (max-width: 768px) {
-            header {
-                padding: 8px 15px;
+            .footer-bottom {
+                padding-top: 12px;
             }
 
-            header h1 {
-                font-size: 16px;
-                flex: 1;
-            }
-
-            header .right {
-                display: none;
-            }
-
-            .hamburger-menu {
-                display: flex;
-            }
-
-            .theme-toggle {
-                padding: 6px 8px;
-                font-size: 14px;
-            }
-
-            .footer {
-                padding: 20px 15px;
+            .footer-bottom p {
+                font-size: 10px;
+                margin: 3px 0;
             }
         }
 
         @media (max-width: 480px) {
-            header {
+            .footer-bottom p {
+                font-size: 9px;
+                margin: 2px 0;
+                padding: 0 5px;
+            }
+        }
+
+        /* Enhanced Responsive Styles */
+        @media (max-width: 1200px) {
+            .main-container {
+                padding: 12px;
+            }
+
+            .card {
+                border-radius: 12px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            body {
+                overflow-x: hidden;
+            }
+
+            .navbar-brand {
+                font-size: 16px;
+            }
+
+            .auth-status-display {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .auth-status-display span {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .navbar {
+                padding: 8px 12px;
+            }
+
+            .navbar-brand {
+                font-size: 15px;
+            }
+
+            .card {
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .panel {
+                padding: 10px;
+            }
+
+            .auth-popup {
+                padding: 15px;
+            }
+
+            .auth-popup-content {
+                max-width: 90vw;
+                margin: 0 auto;
+            }
+
+            .footer {
+                padding: 20px 15px;
+                margin-top: 20px;
+            }
+
+            .footer-bottom p {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 8px;
+                gap: 8px;
+                height: auto;
+            }
+
+            .navbar {
                 padding: 6px 10px;
             }
 
-            header h1 {
-                font-size: 12px;
+            .navbar-brand {
+                font-size: 14px;
             }
 
-            .nav-link,
+            .map-wrap {
+                height: 40vh;
+                min-height: 250px;
+            }
+
+            #chart {
+                height: 35vh;
+                min-height: 200px;
+            }
+
+            .card {
+                border-radius: 8px;
+            }
+
+            .panel {
+                padding: 8px;
+            }
+
             .theme-toggle,
             .auth-button {
-                padding: 4px 6px;
-                min-width: 32px;
+                padding: 8px;
+                min-width: 40px;
+                min-height: 40px;
             }
 
-            .nav-link span:first-child,
-            .auth-button span:first-child {
+            .navbar-nav .nav-link {
+                padding: 10px 14px !important;
+                font-size: 14px;
+                margin: 2px 0;
+            }
+
+            .auth-popup {
+                padding: 10px;
+            }
+
+            .auth-popup-content {
+                border-radius: 12px;
+                max-width: 95vw;
+            }
+
+            .auth-popup-input {
+                padding: 14px 16px;
+                font-size: 16px;
+                /* Prevent zoom on iOS */
+            }
+
+            .auth-popup-button {
+                padding: 14px 16px;
+                font-size: 15px;
+            }
+        }
+
+        /* Tablet and Landscape Orientations */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1.1fr 0.9fr;
+                gap: 12px;
+            }
+
+            .navbar {
+                padding: 10px 18px;
+            }
+
+            .navbar-brand {
+                font-size: 16px;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 7px 10px !important;
                 font-size: 12px;
             }
         }
 
-        @media (min-width: 769px) and (max-width: 1024px) {
-            header {
-                padding: 10px 18px;
+        /* Landscape Phone Optimization */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .main-container {
+                grid-template-columns: 1.5fr 1fr;
+                height: calc(100vh - 60px);
             }
 
-            header h1 {
+            .navbar {
+                padding: 4px 12px;
+            }
+
+            .map-wrap {
+                height: calc(100vh - 80px);
+            }
+
+            #chart {
+                height: calc(100vh - 120px);
+            }
+
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 8px;
+            }
+
+            .stat {
+                padding: 8px;
+                flex-direction: column;
+            }
+
+            .stat .label {
+                font-size: 11px;
+            }
+
+            .stat .value {
                 font-size: 16px;
             }
+        }
 
-            .nav-link {
-                padding: 7px 10px;
-                font-size: 12px;
+        /* Large Screen Optimization */
+        @media (min-width: 1400px) {
+            .main-container {
+                max-width: 1400px;
+                margin: 0 auto;
+                grid-template-columns: 1.3fr 1fr;
+            }
+
+            .card {
+                border-radius: 16px;
+            }
+
+            #chart {
+                height: 55vh;
             }
         }
 
@@ -606,15 +949,32 @@
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .auth-popup {
+                align-items: flex-start;
+                padding: 20px 15px;
+                padding-top: 10vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-popup {
+                padding: 15px 10px;
+                padding-top: 5vh;
+            }
         }
 
         .auth-popup-content {
@@ -626,7 +986,28 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
             max-width: 400px;
             width: calc(100% - 40px);
+            max-height: 80vh;
+            overflow-y: auto;
             position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .auth-popup-content {
+                max-width: 100%;
+                width: calc(100% - 30px);
+                padding: 20px;
+                border-radius: 12px;
+                max-height: 85vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-popup-content {
+                width: calc(100% - 20px);
+                padding: 16px;
+                border-radius: 10px;
+                max-height: 90vh;
+            }
         }
 
         [data-theme="light"] .auth-popup-content {
