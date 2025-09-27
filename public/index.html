@@ -5,6 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>แดชบอร์ด IoT คุณภาพอากาศ DIY</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Noto Sans Thai Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +15,8 @@
     <!-- MapLibre GL JS -->
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- ECharts for charts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
     <!-- Firebase v9 (Modular) for Authentication (Optional) -->
@@ -116,50 +120,198 @@
             --accent: #3b82f6;
         }
 
+        * {
+            font-family: "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        }
+
         html,
         body {
             height: 100%;
             margin: 0;
             background: var(--bg);
             color: var(--text);
-            font-family: "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+            font-family: "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        }
+
+        /* Ensure Bootstrap components use Thai font */
+        .navbar-brand,
+        .navbar-nav .nav-link,
+        .btn,
+        .form-control,
+        .form-label,
+        .card,
+        .dropdown-item,
+        .modal,
+        .tooltip,
+        .popover,
+        /* Chart and dynamic content */
+        canvas,
+        svg,
+        .echarts-tooltip,
+        .maplibre-popup,
+        .maplibre-ctrl,
+        /* Status and interactive elements */
+        .stat,
+        .value,
+        .label,
+        .auth-popup,
+        .footer,
+        /* All headings and text elements */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        span,
+        div,
+        a,
+        button,
+        input,
+        select,
+        textarea,
+        label,
+        legend {
+            font-family: "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif !important;
         }
 
         .hidden {
             display: none !important;
         }
 
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 20px;
-            border-bottom: 1px solid;
-            border-bottom-color: rgba(30, 42, 68, 0.3);
-            position: sticky;
-            top: 0;
-            background: rgba(11, 18, 32, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 10;
+        /* Custom Bootstrap Navbar Styling with Enhanced Transparency */
+        .navbar {
+            background: rgba(11, 18, 32, 0.75) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(30, 42, 68, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        [data-theme="light"] header {
-            border-bottom-color: rgba(226, 232, 240, 0.3);
-            background: rgba(248, 250, 252, 0.7);
+        [data-theme="light"] .navbar {
+            background: rgba(248, 250, 252, 0.75) !important;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
         }
 
-        header h1 {
-            font-size: 18px;
-            margin: 0;
-            letter-spacing: 0.2px;
+        .navbar-brand {
+            color: var(--text) !important;
             font-weight: 600;
+            font-size: 18px;
         }
 
-        header .right {
+        .navbar-nav .nav-link {
+            color: var(--text) !important;
+            background: rgba(18, 26, 43, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(30, 42, 68, 0.3);
+            border-radius: 10px;
+            padding: 8px 12px !important;
+            margin: 0 4px;
+            font-size: 13px;
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] .navbar-nav .nav-link {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(226, 232, 240, 0.3);
+        }
+
+        .navbar-nav .nav-link:hover {
+            background: rgba(18, 26, 43, 0.8);
+            border-color: var(--accent) !important;
+            color: var(--text) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(76, 163, 255, 0.2);
+        }
+
+        [data-theme="light"] .navbar-nav .nav-link:hover {
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+        }
+
+        .navbar-toggler {
+            border: 1px solid var(--text);
+            padding: 4px 8px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        .navbar-toggler-icon {
+            background-image: none;
+            width: 20px;
+            height: 15px;
+            position: relative;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after,
+        .navbar-toggler-icon {
+            background: var(--text);
+        }
+
+        .navbar-toggler-icon,
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 1px;
+            transition: all 0.3s;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: '';
+            position: absolute;
+            left: 0;
+        }
+
+        .navbar-toggler-icon::before {
+            top: -6px;
+        }
+
+        .navbar-toggler-icon::after {
+            bottom: -6px;
+        }
+
+        .theme-toggle,
+        .auth-button {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            margin: 0 2px;
+        }
+
+        [data-theme="light"] .theme-toggle,
+        [data-theme="light"] .auth-button {
+            border-color: #e2e8f0;
+        }
+
+        .theme-toggle:hover,
+        .auth-button:hover {
+            border-color: var(--accent);
+        }
+
+        .auth-status-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
         }
 
         .badge {
@@ -177,13 +329,13 @@
             border-color: #e2e8f0;
         }
 
-        .container {
+        .main-container {
             display: grid;
             grid-template-columns: 1.2fr 1fr;
             grid-template-rows: auto 1fr;
             gap: 14px;
             padding: 14px;
-            height: calc(100% - 58px);
+            height: calc(100vh - 80px);
             box-sizing: border-box;
         }
 
@@ -322,9 +474,69 @@
             opacity: 0.8;
         }
 
+        /* Responsive Navbar Styles */
         @media (max-width: 768px) {
+            header {
+                padding: 8px 15px;
+            }
+
+            header h1 {
+                font-size: 16px;
+                flex: 1;
+            }
+
+            header .right {
+                display: none;
+            }
+
+            .hamburger-menu {
+                display: flex;
+            }
+
+            .theme-toggle {
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+
             .footer {
                 padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 6px 10px;
+            }
+
+            header h1 {
+                font-size: 12px;
+            }
+
+            .nav-link,
+            .theme-toggle,
+            .auth-button {
+                padding: 4px 6px;
+                min-width: 32px;
+            }
+
+            .nav-link span:first-child,
+            .auth-button span:first-child {
+                font-size: 12px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            header {
+                padding: 10px 18px;
+            }
+
+            header h1 {
+                font-size: 16px;
+            }
+
+            .nav-link {
+                padding: 7px 10px;
+                font-size: 12px;
             }
         }
 
@@ -570,31 +782,46 @@
 </head>
 
 <body>
-    <header>
-        <h1>แดชบอร์ด IoT คุณภาพอากาศ DIY</h1>
-        <div class="right">
-            <a href="register.html" class="nav-link" title="ลงทะเบียนอุปกรณ์ใหม่">
-                <span>📱</span>
-                <span>ลงทะเบียนอุปกรณ์</span>
-            </a>
-            <a href="about.html" class="nav-link" title="เกี่ยวกับโครงการ">
-                <span>ℹ️</span>
-                <span>เกี่ยวกับ</span>
-            </a>
-            <button id="theme-toggle" class="theme-toggle" title="เปลี่ยนธีม">
-                <span class="theme-icon dark-icon">🌙</span>
-                <span class="theme-icon light-icon hidden">☀️</span>
+    <!-- Bootstrap Navbar -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="./">� แดชบอร์ด IoT คุณภาพอากาศ DIY</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="auth-status-display">
-                <span id="auth-status">กำลังเริ่มต้น…</span>
-                <button id="auth-button" class="auth-button" title="การยืนยันตัวตน">
-                    <span id="auth-icon">🔒</span>
-                    <span id="auth-text">เข้าสู่ระบบ</span>
-                </button>
-                <button id="btn-logout" class="auth-button hidden">ออกจากระบบ</button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto me-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="register.html">
+                            <span>📱</span>
+                            <span>ลงทะเบียนอุปกรณ์</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">
+                            <span>ℹ️</span>
+                            <span>เกี่ยวกับ</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    <button id="theme-toggle" class="theme-toggle" title="เปลี่ยนธีม">
+                        <span class="theme-icon dark-icon">🌙</span>
+                        <span class="theme-icon light-icon hidden">☀️</span>
+                    </button>
+                    <div class="auth-status-display">
+                        <span id="auth-status">กำลังเริ่มต้น…</span>
+                        <button id="auth-button" class="auth-button" title="การยืนยันตัวตน">
+                            <span id="auth-icon">🔒</span>
+                            <span id="auth-text">เข้าสู่ระบบ</span>
+                        </button>
+                        <button id="btn-logout" class="auth-button hidden">ออกจากระบบ</button>
+                    </div>
+                </div>
             </div>
         </div>
-    </header>
+    </nav>
 
     <!-- Authentication Popup -->
     <div id="auth-popup" class="auth-popup hidden">
@@ -614,7 +841,7 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="main-container">
         <div class="map-wrap card">
             <div id="map"></div>
         </div>
@@ -754,7 +981,7 @@
                     .addTo(map);
             });
 
-            bootstrap();
+            initializeApp();
         });
 
         // ------------------------------
@@ -776,21 +1003,37 @@
 
         function createBaseChartOption() {
             const colors = getChartThemeColors();
+            const thaiFont = '"Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif';
             return {
                 backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis' },
+                tooltip: {
+                    trigger: 'axis',
+                    textStyle: { fontFamily: thaiFont }
+                },
                 grid: { left: 55, right: 20, top: 20, bottom: 45 },
-                legend: { textStyle: { color: colors.textColor } },
+                legend: {
+                    textStyle: {
+                        color: colors.textColor,
+                        fontFamily: thaiFont
+                    }
+                },
                 xAxis: {
                     type: 'time',
                     axisLine: { lineStyle: { color: colors.axisLineColor } },
-                    axisLabel: { color: colors.axisLabelColor }
+                    axisLabel: {
+                        color: colors.axisLabelColor,
+                        fontFamily: thaiFont
+                    }
                 },
                 yAxis: {
                     type: 'value', name: 'µg/m³',
                     axisLine: { lineStyle: { color: colors.axisLineColor } },
                     splitLine: { lineStyle: { color: colors.splitLineColor } },
-                    axisLabel: { color: colors.axisLabelColor }
+                    axisLabel: {
+                        color: colors.axisLabelColor,
+                        fontFamily: thaiFont
+                    },
+                    nameTextStyle: { fontFamily: thaiFont }
                 },
                 series: [
                     {
@@ -923,7 +1166,7 @@
             }
         }
 
-        async function bootstrap() {
+        async function initializeApp() {
             const devices = await loadDevices();
             if (devices.length) {
                 document.getElementById('device-select').value = devices[0].id;
@@ -1008,6 +1251,7 @@
         document.getElementById('device-select').addEventListener('change', () => refreshChart());
         document.getElementById('time-range').addEventListener('change', () => refreshChart());
         document.getElementById('btn-refresh').addEventListener('click', () => refreshChart());
+
     </script>
 </body>
 
