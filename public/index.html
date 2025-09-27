@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>แดชบอร์ด IoT คุณภาพอากาศ DIY</title>
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- MapLibre GL JS -->
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <!-- ECharts for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <!-- Firebase v9 (Modular) for Authentication (Optional) -->
+    <script type="module" crossorigin>
+        // --- Authentication (Firebase, optional) ---
+        // 1) Create a Firebase project: https://console.firebase.google.com/
+        // 2) Enable Email/Password and/or Google provider in Authentication.
+        // 3) Replace the placeholder config below with your project's config.
+        // 4) If you do not want Firebase, you can remove this block and
+        //    use the simple "Demo Mode" credentials logic further below.
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+            projectId: "YOUR_FIREBASE_PROJECT_ID",
+            appId: "YOUR_FIREBASE_APP_ID"
+        };
+
+        // If the user has not provided config, run in demo mode gracefully.
+        let useFirebase = true;
+        for (const k of ['apiKey', 'authDomain', 'projectId', 'appId']) {
+            if (!firebaseConfig[k] || firebaseConfig[k].startsWith('YOUR_FIREBASE')) { useFirebase = false; break; }
+        }
+
+        let auth = null;
+        if (useFirebase) {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            window.__auth = auth; // expose for other scripts
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    updateAuthDisplay(true, `${user.email || user.displayName}`);
+                    document.body.classList.remove('demo-mode');
+                    closeAuthPopup();
+                } else {
+                    updateAuthDisplay(false);
+                    document.body.classList.add('demo-mode');
+                }
+            });
+
+            document.getElementById('btn-login').addEventListener('click', async () => {
+                const email = /** @type {HTMLInputElement} */(document.getElementById('email')).value;
+                const password = /** @type {HTMLInputElement} */(document.getElementById('password')).value;
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (e) {
+                    alert('Login failed: ' + e.message);
+                }
+            });
+
+            document.getElementById('btn-google').addEventListener('click', async () => {
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+                } catch (e) {
+                    alert('Google sign-in failed: ' + e.message);
+                }
+            });
+
+            document.getElementById('btn-logout').addEventListener('click', async () => {
+                try { await signOut(auth); } catch (e) { alert('Logout failed: ' + e.message); }
+            });
+        } else {
+            // --- Demo Mode Auth (do NOT use in production) ---
+            window.__auth = null;
+            updateAuthDisplay(false);
+            document.getElementById('auth-status').textContent = 'โหมดทดลอง: ใช้ข้อมูลอะไรก็ได้';
+            document.body.classList.add('demo-mode');
+
+            document.getElementById('btn-login').addEventListener('click', () => {
+                updateAuthDisplay(true, 'demo@example.com');
+                closeAuthPopup();
+            });
+            document.getElementById('btn-google').addEventListener('click', () => {
+                updateAuthDisplay(true, 'ผู้ใช้ทดลอง (Google)');
+                closeAuthPopup();
+            });
+            document.getElementById('btn-logout').addEventListener('click', () => {
+                updateAuthDisplay(false);
+            });
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: #121a2b;
+            --muted: #a6b0c3;
+            --text: #e8eefc;
+            --accent: #4ca3ff;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --muted: #64748b;
+            --text: #1e293b;
+            --accent: #3b82f6;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid;
+            border-bottom-color: rgba(30, 42, 68, 0.3);
+            position: sticky;
+            top: 0;
+            background: rgba(11, 18, 32, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+
+        [data-theme="light"] header {
+            border-bottom-color: rgba(226, 232, 240, 0.3);
+            background: rgba(248, 250, 252, 0.7);
+        }
+
+        header h1 {
+            font-size: 18px;
+            margin: 0;
+            letter-spacing: 0.2px;
+            font-weight: 600;
+        }
+
+        header .right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .badge {
+            background: #0f233d;
+            color: var(--muted);
+            border: 1px solid;
+            border-color: #1e2a44;
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        [data-theme="light"] .badge {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 14px;
+            padding: 14px;
+            height: calc(100% - 58px);
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 14px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        [data-theme="light"] .card {
+            border-color: #e2e8f0;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 14px;
+        }
+
+        .map-wrap {
+            grid-row: 1 / span 2;
+            grid-column: 1;
+            overflow: hidden;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .stat {
+            padding: 14px;
+            border-radius: 12px;
+            background: #0f1630;
+            border: 1px solid #203054;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        [data-theme="light"] .stat {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+
+        .stat .label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .stat .value {
+            font-weight: 700;
+            font-size: 22px;
+        }
+
+        #chart {
+            height: 52vh;
+            border-radius: 14px;
+        }
+
+        .panel {
+            padding: 12px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls select,
+        .controls input,
+        .controls button {
+            background: #0f233d;
+            color: var(--text);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        [data-theme="light"] .controls select,
+        [data-theme="light"] .controls input,
+        [data-theme="light"] .controls button {
+            background: var(--panel);
+            border-color: #e2e8f0;
+        }
+
+        .controls button:hover {
+            border-color: var(--accent);
+        }
+
+        .auth {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth input {
+            width: 170px;
+        }
+
+        .footer {
+            background: var(--panel);
+            border-top: 1px solid;
+            border-top-color: #1e2a44;
+            margin-top: 40px;
+            padding: 30px 20px 15px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        [data-theme="light"] .footer {
+            border-top-color: #e2e8f0;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 15px;
+        }
+
+        [data-theme="light"] .footer-bottom {
+            border-top-color: #e2e8f0;
+        }
+
+        .footer-bottom p {
+            margin: 4px 0;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                padding: 20px 15px;
+            }
+        }
+
+        .theme-toggle {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid #1e2a44;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
+        }
+
+        .theme-icon {
+            display: block;
+        }
+
+        [data-theme="light"] .theme-toggle {
+            border-color: #e2e8f0;
+        }
+
+        [data-theme="light"] .dark-icon {
+            display: none;
+        }
+
+        [data-theme="light"] .light-icon {
+            display: block;
+        }
+
+        [data-theme="dark"] .light-icon,
+        .light-icon {
+            display: none;
+        }
+
+        .auth-button {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: border-color 0.2s;
+        }
+
+        [data-theme="light"] .auth-button {
+            border-color: #e2e8f0;
+        }
+
+        .auth-button:hover {
+            border-color: var(--accent);
+        }
+
+        .auth-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .auth-popup-content {
+            background: var(--panel);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 400px;
+            width: calc(100% - 40px);
+            position: relative;
+        }
+
+        [data-theme="light"] .auth-popup-content {
+            border-color: #e2e8f0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .auth-popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .auth-popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .auth-popup-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--muted);
+            padding: 4px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .auth-popup-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] .auth-popup-close:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .auth-popup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .auth-popup-input {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        [data-theme="light"] .auth-popup-input {
+            border-color: #e2e8f0;
+        }
+
+        .auth-popup-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .auth-popup-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .auth-popup-button {
+            flex: 1;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .auth-popup-button:hover {
+            opacity: 0.9;
+        }
+
+        .auth-popup-button.secondary {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid;
+            border-color: #1e2a44;
+        }
+
+        [data-theme="light"] .auth-popup-button.secondary {
+            border-color: #e2e8f0;
+        }
+
+        .auth-status-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .nav-link {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid;
+            border-color: #1e2a44;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: border-color 0.2s;
+        }
+
+        [data-theme="light"] .nav-link {
+            border-color: #e2e8f0;
+        }
+
+        .nav-link:hover {
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 1000px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+
+            .map-wrap {
+                grid-row: auto;
+                grid-column: auto;
+                height: 48vh;
+            }
+
+            #map {
+                height: 100%;
+            }
+
+            #chart {
+                height: 42vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>แดชบอร์ด IoT คุณภาพอากาศ DIY</h1>
+        <div class="right">
+            <a href="register.html" class="nav-link" title="ลงทะเบียนอุปกรณ์ใหม่">
+                <span>📱</span>
+                <span>ลงทะเบียนอุปกรณ์</span>
+            </a>
+            <button id="theme-toggle" class="theme-toggle" title="เปลี่ยนธีม">
+                <span class="theme-icon dark-icon">🌙</span>
+                <span class="theme-icon light-icon hidden">☀️</span>
+            </button>
+            <div class="auth-status-display">
+                <span id="auth-status">กำลังเริ่มต้น…</span>
+                <button id="auth-button" class="auth-button" title="การยืนยันตัวตน">
+                    <span id="auth-icon">🔒</span>
+                    <span id="auth-text">เข้าสู่ระบบ</span>
+                </button>
+                <button id="btn-logout" class="auth-button hidden">ออกจากระบบ</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Authentication Popup -->
+    <div id="auth-popup" class="auth-popup hidden">
+        <div class="auth-popup-content">
+            <div class="auth-popup-header">
+                <h3 class="auth-popup-title">การยืนยันตัวตน</h3>
+                <button id="auth-popup-close" class="auth-popup-close" title="ปิด">×</button>
+            </div>
+            <div class="auth-popup-form">
+                <input id="email" class="auth-popup-input" type="email" placeholder="ที่อยู่อีเมล" />
+                <input id="password" class="auth-popup-input" type="password" placeholder="รหัสผ่าน" />
+                <div class="auth-popup-buttons">
+                    <button id="btn-login" class="auth-popup-button">เข้าสู่ระบบ</button>
+                    <button id="btn-google" class="auth-popup-button secondary">Google</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="map-wrap card">
+            <div id="map"></div>
+        </div>
+
+        <div class="card">
+            <div class="stats">
+                <div class="stat">
+                    <span class="label">จำนวนอุปกรณ์</span>
+                    <span id="device-count" class="value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="label">อุปกรณ์ที่เลือก</span>
+                    <span id="selected-device" class="value">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">อัปเดตล่าสุด</span>
+                    <span id="last-update" class="value">—</span>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="controls">
+                    <label for="device-select">อุปกรณ์:</label>
+                    <select id="device-select"></select>
+                    <label for="time-range">ช่วงเวลา:</label>
+                    <select id="time-range">
+                        <option value="6h">6 ชั่วโมงที่ผ่านมา</option>
+                        <option value="12h">12 ชั่วโมงที่ผ่านมา</option>
+                        <option value="24h" selected>24 ชั่วโมงที่ผ่านมา</option>
+                        <option value="7d">7 วันที่ผ่านมา</option>
+                    </select>
+                    <button id="btn-refresh">รีเฟรช</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div id="chart"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>แผนที่ © ผู้ร่วมงาน OpenStreetMap • พัฒนาด้วย MapLibre GL JS และ ECharts</p>
+            <p>&copy; 2025 CMU GIST North - DIY Air Quality IoT System • จัดทำเพื่อการศึกษาและวิจัย</p>
+        </div>
+    </footer>
+
+    <script>
+        // ------------------------------
+        // Configuration (replace endpoints)
+        // ------------------------------
+        const API = {
+            devices: '/api/devices', // should return an array of {id,name,lat,lon,pm25,pm10,updated_at}
+            timeseries: (deviceId, range) => `/api/timeseries?device_id=${encodeURIComponent(deviceId)}&range=${encodeURIComponent(range)}` // returns [{timestamp, pm25, pm10}]
+        };
+
+        // For demo purposes, we provide mock data when API endpoints are unavailable.
+        const DEMO_DEVICES = [
+            { id: 'DUST-001', name: 'ประตูเหนือ มช.', lat: 18.805, lon: 98.955, pm25: 32, pm10: 47, updated_at: new Date().toISOString() },
+            { id: 'DUST-002', name: 'ถนนนิมมานเหมินท์', lat: 18.796, lon: 98.967, pm25: 41, pm10: 57, updated_at: new Date().toISOString() },
+            { id: 'DUST-003', name: 'อำเภอแม่ริม', lat: 18.936, lon: 98.942, pm25: 24, pm10: 36, updated_at: new Date().toISOString() }
+        ];
+
+        function mockTimeseries(deviceId, hours = 24) {
+            const now = Date.now();
+            const step = 5 * 60 * 1000; // 5 minutes
+            const pts = [];
+            for (let t = now - hours * 3600 * 1000; t <= now; t += step) {
+                const base25 = 20 + 10 * Math.sin(t / 3.6e6) + Math.random() * 8;
+                const base10 = base25 + 12 + Math.random() * 10;
+                pts.push({ timestamp: new Date(t).toISOString(), pm25: +(base25.toFixed(1)), pm10: +(base10.toFixed(1)) });
+            }
+            return pts;
+        }
+
+        // ------------------------------
+        // Map Initialization (MapLibre)
+        // ------------------------------
+        const map = new maplibregl.Map({
+            container: 'map',
+            // Minimal raster style using free OSM tiles
+            style: {
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster',
+                        tiles: [
+                            'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                        ],
+                        tileSize: 256,
+                        attribution: '© OpenStreetMap contributors'
+                    }
+                },
+                layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+            },
+            center: [98.967, 18.796],
+            zoom: 11
+        });
+
+        map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
+        map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }));
+
+        // Device layer (GeoJSON source)
+        const devicesSourceId = 'devices-src';
+        const devicesLayerId = 'devices-layer';
+
+        map.on('load', () => {
+            map.addSource(devicesSourceId, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+            map.addLayer({
+                id: devicesLayerId,
+                type: 'circle',
+                source: devicesSourceId,
+                paint: {
+                    'circle-radius': 7,
+                    'circle-color': [
+                        'interpolate', ['linear'], ['get', 'pm25'],
+                        0, '#7ad151', 25, '#fde725', 50, '#f2831e', 100, '#d7191c'
+                    ],
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#0b1220'
+                }
+            });
+
+            map.on('click', devicesLayerId, (e) => {
+                const f = e.features?.[0];
+                if (!f) return;
+                const id = f.properties.id;
+                const name = f.properties.name;
+                document.getElementById('selected-device').textContent = name;
+                const sel = document.getElementById('device-select');
+                sel.value = id;
+                refreshChart();
+                new maplibregl.Popup().setLngLat(e.lngLat)
+                    .setHTML(`<strong>${name}</strong><br/>PM2.5: ${f.properties.pm25}<br/>PM10: ${f.properties.pm10}`)
+                    .addTo(map);
+            });
+
+            bootstrap();
+        });
+
+        // ------------------------------
+        // Chart (ECharts)
+        // ------------------------------
+        let chart;
+
+        function getChartThemeColors() {
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            return {
+                textColor: isDark ? '#cfd7e6' : '#64748b',
+                axisLineColor: isDark ? '#4a5f88' : '#cbd5e1',
+                axisLabelColor: isDark ? '#a6b0c3' : '#64748b',
+                splitLineColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                pm25Color: isDark ? '#4ca3ff' : '#3b82f6',
+                pm10Color: isDark ? '#ff6b6b' : '#ef4444'
+            };
+        }
+
+        function createBaseChartOption() {
+            const colors = getChartThemeColors();
+            return {
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis' },
+                grid: { left: 55, right: 20, top: 20, bottom: 45 },
+                legend: { textStyle: { color: colors.textColor } },
+                xAxis: {
+                    type: 'time',
+                    axisLine: { lineStyle: { color: colors.axisLineColor } },
+                    axisLabel: { color: colors.axisLabelColor }
+                },
+                yAxis: {
+                    type: 'value', name: 'µg/m³',
+                    axisLine: { lineStyle: { color: colors.axisLineColor } },
+                    splitLine: { lineStyle: { color: colors.splitLineColor } },
+                    axisLabel: { color: colors.axisLabelColor }
+                },
+                series: [
+                    {
+                        name: 'PM2.5',
+                        type: 'line',
+                        showSymbol: false,
+                        smooth: true,
+                        data: [],
+                        itemStyle: { color: colors.pm25Color },
+                        lineStyle: { color: colors.pm25Color }
+                    },
+                    {
+                        name: 'PM10',
+                        type: 'line',
+                        showSymbol: false,
+                        smooth: true,
+                        data: [],
+                        itemStyle: { color: colors.pm10Color },
+                        lineStyle: { color: colors.pm10Color }
+                    }
+                ]
+            };
+        }
+
+        function initChart() {
+            const chartEl = document.getElementById('chart');
+            if (chart) {
+                chart.dispose();
+            }
+            chart = echarts.init(chartEl);
+            chart.setOption(createBaseChartOption());
+        }
+
+        // Initialize chart
+        initChart();
+
+        window.addEventListener('resize', () => chart.resize());
+
+        // ------------------------------
+        // Data loading & UI wiring
+        // ------------------------------
+        async function fetchJSON(url) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+                return await res.json();
+            } catch (err) {
+                console.warn('API endpoint ไม่พร้อมใช้งาน, ใช้ข้อมูลทดลองสำหรับ', url, err.message);
+                return null;
+            }
+        }
+
+        async function loadDevices() {
+            const data = await fetchJSON(API.devices);
+            const devices = Array.isArray(data) && data.length ? data : DEMO_DEVICES;
+
+            // Update device count and dropdown
+            document.getElementById('device-count').textContent = devices.length.toString();
+            const select = document.getElementById('device-select');
+            select.innerHTML = devices.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+            if (devices.length) {
+                document.getElementById('selected-device').textContent = devices[0].name;
+            }
+            if (devices[0]?.updated_at) {
+                document.getElementById('last-update').textContent = new Date(devices[0].updated_at).toLocaleString();
+            }
+
+            // Build GeoJSON features
+            const features = devices.map(d => ({
+                type: 'Feature',
+                properties: { id: d.id, name: d.name, pm25: d.pm25 ?? 0, pm10: d.pm10 ?? 0 },
+                geometry: { type: 'Point', coordinates: [d.lon, d.lat] }
+            }));
+
+            const collection = { type: 'FeatureCollection', features };
+            const src = map.getSource(devicesSourceId);
+            if (src) src.setData(collection);
+
+            // Fit bounds
+            if (features.length) {
+                const b = new maplibregl.LngLatBounds();
+                features.forEach(f => b.extend(f.geometry.coordinates));
+                try { map.fitBounds(b, { padding: 40, duration: 800 }); } catch { }
+            }
+
+            return devices;
+        }
+
+        async function loadTimeseries(deviceId, rangeValue) {
+            // Parse range value
+            const hours = rangeValue.endsWith('h') ? parseInt(rangeValue) : (rangeValue === '7d' ? 24 * 7 : 24);
+            const url = API.timeseries(deviceId, rangeValue);
+            const data = await fetchJSON(url);
+            const ts = (Array.isArray(data) && data.length) ? data : mockTimeseries(deviceId, hours);
+            return ts;
+        }
+
+        async function refreshChart() {
+            const deviceId = document.getElementById('device-select').value;
+            const rangeValue = document.getElementById('time-range').value;
+
+            if (!deviceId) return;
+
+            const ts = await loadTimeseries(deviceId, rangeValue);
+            const series25 = ts.map(p => [p.timestamp, p.pm25]);
+            const series10 = ts.map(p => [p.timestamp, p.pm10]);
+
+            const colors = getChartThemeColors();
+
+            chart.setOption({
+                title: {
+                    text: `PM2.5 / PM10 – ${deviceId}`,
+                    left: 12,
+                    top: 6,
+                    textStyle: {
+                        color: colors.textColor,
+                        fontSize: 12,
+                        fontWeight: 500
+                    }
+                },
+                series: [
+                    { data: series25 },
+                    { data: series10 }
+                ]
+            });
+
+            if (ts.length) {
+                document.getElementById('last-update').textContent = new Date(ts[ts.length - 1].timestamp).toLocaleString();
+            }
+        }
+
+        async function bootstrap() {
+            const devices = await loadDevices();
+            if (devices.length) {
+                document.getElementById('device-select').value = devices[0].id;
+            }
+            await refreshChart();
+        }
+
+        // Theme switching functionality
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeToggle(savedTheme);
+        }
+
+        function updateThemeToggle(theme) {
+            const darkIcon = document.querySelector('.dark-icon');
+            const lightIcon = document.querySelector('.light-icon');
+
+            if (theme === 'light') {
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+            } else {
+                darkIcon.classList.remove('hidden');
+                lightIcon.classList.add('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeToggle(newTheme);
+
+            // Reinitialize chart with new theme
+            initChart();
+            refreshChart();
+        }
+
+        // Authentication popup functionality
+        function openAuthPopup() {
+            document.getElementById('auth-popup').classList.remove('hidden');
+        }
+
+        function closeAuthPopup() {
+            document.getElementById('auth-popup').classList.add('hidden');
+        }
+
+        function updateAuthDisplay(isAuthenticated, userInfo = null) {
+            const authStatus = document.getElementById('auth-status');
+            const authButton = document.getElementById('auth-button');
+            const authIcon = document.getElementById('auth-icon');
+            const authText = document.getElementById('auth-text');
+            const logoutBtn = document.getElementById('btn-logout');
+
+            if (isAuthenticated) {
+                authStatus.textContent = userInfo || 'เข้าสู่ระบบแล้ว';
+                authIcon.textContent = '✓';
+                authText.textContent = 'บัญชี';
+                authButton.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+            } else {
+                authStatus.textContent = 'ยังไม่ได้เข้าสู่ระบบ';
+                authIcon.textContent = '🔒';
+                authText.textContent = 'เข้าสู่ระบบ';
+                authButton.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        // Initialize theme on page load
+        initTheme();
+
+        // UI events
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        document.getElementById('auth-button').addEventListener('click', openAuthPopup);
+        document.getElementById('auth-popup-close').addEventListener('click', closeAuthPopup);
+        document.getElementById('auth-popup').addEventListener('click', (e) => {
+            if (e.target.id === 'auth-popup') closeAuthPopup();
+        });
+        document.getElementById('device-select').addEventListener('change', () => refreshChart());
+        document.getElementById('time-range').addEventListener('change', () => refreshChart());
+        document.getElementById('btn-refresh').addEventListener('click', () => refreshChart());
+    </script>
+</body>
+
+</html>
