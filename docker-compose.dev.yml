@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Development Node.js Application with Hot Reload
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: cmu-iot-app-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - TZ=Asia/Bangkok
+    volumes:
+      # Mount source code for hot reload
+      - ./public:/app/public
+      - ./server.js:/app/server.js
+      - ./package.json:/app/package.json
+      - ./nodemon.json:/app/nodemon.json
+      - /app/node_modules  # Named volume for node_modules
+    networks:
+      - iot-network-dev
+    command: npm run dev
+
+  # PostgreSQL Database for Development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: cmu-iot-db-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=iot_user
+      - POSTGRES_PASSWORD=dev_password
+      - POSTGRES_DB=iot_airquality_dev
+      - TZ=Asia/Bangkok
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Use different port to avoid conflicts
+    networks:
+      - iot-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iot_user -d iot_airquality_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache for Development
+  redis-dev:
+    image: redis:7-alpine
+    container_name: cmu-iot-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6380:6379"  # Use different port to avoid conflicts
+    networks:
+      - iot-network-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer - Database Management Tool
+  adminer:
+    image: adminer:latest
+    container_name: cmu-iot-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - iot-network-dev
+    depends_on:
+      - postgres-dev
+
+networks:
+  iot-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
