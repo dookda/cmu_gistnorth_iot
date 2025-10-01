@@ -3,11 +3,11 @@ version: '3.8'
 services:
   # Development Node.js Application with Hot Reload
   app-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    image: node:18-alpine
     container_name: cmu-iot-app-dev
     restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
     ports:
       - "3000:3000"
     environment:
@@ -16,14 +16,10 @@ services:
       - TZ=Asia/Bangkok
     volumes:
       # Mount source code for hot reload
-      - ./public:/app/public
-      - ./server.js:/app/server.js
-      - ./package.json:/app/package.json
-      - ./nodemon.json:/app/nodemon.json
+      - ./:/app
       - /app/node_modules  # Named volume for node_modules
     networks:
       - iot-network-dev
-    command: npm run dev
 
   # PostgreSQL Database for Development
   postgres-dev:

@@ -2,14 +2,11 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NODE_ENV: production
-    image: cmu-iot-app:latest
+    image: node:18-alpine
     container_name: cmu-iot-app-prod
     restart: always
+    working_dir: /app
+    command: sh -c "npm ci --only=production && node server.js"
     ports:
       - "3000:3000"
     environment:
@@ -19,10 +16,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./public:/app/public:ro  # Read-only for security
-      - ./server.js:/app/server.js:ro
-      - ./package.json:/app/package.json:ro
-      - ./nodemon.json:/app/nodemon.json:ro
+      - ./:/app:ro  # Read-only for security
+      - /app/node_modules
     networks:
       - iot-network-prod
     deploy:
@@ -40,7 +35,7 @@ services:
         max-file: "3"
         labels: "production"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3

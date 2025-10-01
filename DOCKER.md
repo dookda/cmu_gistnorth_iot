@@ -11,30 +11,34 @@ This guide explains how to run the CMU GIST North IoT Air Quality Dashboard usin
 
 ### Production Mode
 
-1. **Build and start the application:**
+1. **Start the application:**
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
+
+Note: No build step required! Uses official Node.js image directly.
 
 2. **Access the application:**
 - Application: http://localhost:3000
 
 3. **View logs:**
 ```bash
-docker-compose logs -f app
+docker compose logs -f app
 ```
 
 4. **Stop the application:**
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Development Mode
 
-1. **Build and start with hot reload:**
+1. **Start with hot reload:**
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
+
+Note: Dependencies are installed automatically on first run.
 
 2. **Access the services:**
 - Application: http://localhost:3000
@@ -44,77 +48,73 @@ docker-compose -f docker-compose.dev.yml up -d
 
 3. **View logs:**
 ```bash
-docker-compose -f docker-compose.dev.yml logs -f app-dev
+docker compose -f docker-compose.dev.yml logs -f app-dev
 ```
 
 4. **Stop services:**
 ```bash
-docker-compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.dev.yml down
 ```
 
 ## Docker Commands Reference
 
-### Build Commands
+### Image Commands
 
 ```bash
-# Build production image
-docker-compose build
+# Pull latest Node.js image
+docker compose pull
 
-# Build development image
-docker-compose -f docker-compose.dev.yml build
+# Pull development images
+docker compose -f docker-compose.dev.yml pull
 
-# Build without cache
-docker-compose build --no-cache
-
-# Pull latest images
-docker-compose pull
+# Note: No build step needed - uses official Node.js 18 Alpine image
 ```
 
 ### Run Commands
 
 ```bash
 # Start services in background
-docker-compose up -d
+docker compose up -d
 
 # Start services and view logs
-docker-compose up
+docker compose up
 
 # Start specific service
-docker-compose up -d app
+docker compose up -d app
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # Stop services
-docker-compose stop
+docker compose stop
 
 # Stop and remove containers
-docker-compose down
+docker compose down
 
 # Stop and remove containers + volumes
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Maintenance Commands
 
 ```bash
 # View running containers
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs
+docker compose logs
 
 # View logs for specific service
-docker-compose logs app
+docker compose logs app
 
 # Follow logs
-docker-compose logs -f
+docker compose logs -f
 
 # Execute commands in container
-docker-compose exec app sh
+docker compose exec app sh
 
 # Check health status
-docker-compose ps
+docker compose ps
 docker inspect --format='{{.State.Health.Status}}' cmu-iot-app
 ```
 
@@ -122,16 +122,16 @@ docker inspect --format='{{.State.Health.Status}}' cmu-iot-app
 
 ```bash
 # Access PostgreSQL
-docker-compose exec postgres psql -U iot_user -d iot_airquality
+docker compose exec postgres psql -U iot_user -d iot_airquality
 
 # Backup database
-docker-compose exec postgres pg_dump -U iot_user iot_airquality > backup.sql
+docker compose exec postgres pg_dump -U iot_user iot_airquality > backup.sql
 
 # Restore database
-docker-compose exec -T postgres psql -U iot_user -d iot_airquality < backup.sql
+docker compose exec -T postgres psql -U iot_user -d iot_airquality < backup.sql
 
 # View database logs
-docker-compose logs postgres
+docker compose logs postgres
 ```
 
 ## Configuration
@@ -235,13 +235,16 @@ lsof -i :3000
 
 ```bash
 # View detailed logs
-docker-compose logs app
+docker compose logs app
 
 # Check container status
-docker-compose ps
+docker compose ps
 
-# Rebuild container
-docker-compose up -d --build app
+# Restart container
+docker compose restart app
+
+# Recreate container
+docker compose up -d --force-recreate app
 ```
 
 ### Permission Issues
@@ -251,17 +254,17 @@ docker-compose up -d --build app
 sudo chown -R $USER:$USER .
 
 # Or run with sudo (not recommended)
-sudo docker-compose up -d
+sudo docker compose up -d
 ```
 
 ### Clean Everything
 
 ```bash
 # Remove all containers and volumes
-docker-compose down -v
+docker compose down -v
 
-# Remove images
-docker rmi $(docker images -q cmu-gistnorth-iot*)
+# Remove Node.js images (optional)
+docker rmi node:18-alpine
 
 # Prune everything (careful!)
 docker system prune -a --volumes
@@ -304,34 +307,40 @@ docker network prune
 ### GitHub Actions Example
 
 ```yaml
-name: Docker Build and Push
+name: Docker Compose Test
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       
-      - name: Build Docker image
-        run: docker-compose build
+      - name: Start services
+        run: docker compose up -d
+      
+      - name: Wait for app
+        run: sleep 10
       
       - name: Run tests
-        run: docker-compose run app npm test
+        run: docker compose exec -T app npm test
       
-      - name: Push to registry
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker-compose push
+      - name: View logs
+        if: failure()
+        run: docker compose logs
+      
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
 ```
 
 ## Support
 
 For issues or questions:
-- Check logs: `docker-compose logs`
+- Check logs: `docker compose logs`
 - Inspect container: `docker inspect cmu-iot-app`
 - Visit: https://github.com/dookda/cmu_gistnorth_iot
 

@@ -4,32 +4,26 @@ A DIY IoT Air Quality Monitoring Dashboard for real-time PM2.5 and PM10 data vis
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended)
+### Prerequisites
+
+- **Node.js** (v14+) - [Download](https://nodejs.org/)
+- **npm** (comes with Node.js)
+- **Docker** (optional) - [Download](https://docs.docker.com/get-docker/)
+
+### Automated Setup (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/dookda/cmu_gistnorth_iot.git
 cd cmu_gistnorth_iot
 
-# Start with Docker Compose
-docker-compose up -d
-
-# Access the application
-open http://localhost:3000
+# Run the setup script
+./setup.sh
 ```
 
-**Using Makefile (easier):**
-```bash
-make up        # Start production
-make dev       # Start development with hot reload
-make logs      # View logs
-make down      # Stop containers
-make help      # Show all available commands
-```
+📖 **[Full Installation Guide](INSTALL.md)**
 
-📖 **[Full Docker Documentation](DOCKER.md)**
-
-### Option 2: Manual Setup
+### Option 1: Local Development
 
 ```bash
 # Install dependencies
@@ -41,6 +35,26 @@ npm start
 # For development with hot reload
 npm run dev
 ```
+
+Then open: **http://localhost:3000**
+
+### Option 2: Docker (Recommended for Production)
+
+```bash
+# Start production
+docker compose up -d
+
+# Start development with hot reload
+docker compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker compose logs -f
+
+# Stop containers
+docker compose down
+```
+
+📖 **[Full Docker Documentation](DOCKER.md)**
 
 ## 📋 Features
 
@@ -88,24 +102,23 @@ PORT=3000
 
 ```bash
 # Production
-make up              # Start production
-make down            # Stop production
-make logs            # View logs
-make restart         # Restart services
+docker compose up -d              # Start production
+docker compose down               # Stop production
+docker compose logs -f            # View logs
+docker compose restart            # Restart services
 
 # Development
-make dev             # Start dev with hot reload
-make dev-down        # Stop dev environment
-make dev-logs        # View dev logs
+docker compose -f docker-compose.dev.yml up -d      # Start dev with hot reload
+docker compose -f docker-compose.dev.yml down       # Stop dev environment
+docker compose -f docker-compose.dev.yml logs -f    # View dev logs
 
 # Database
-make db-shell        # Open PostgreSQL shell
-make db-backup       # Backup database
+docker compose -f docker-compose.dev.yml exec postgres-dev psql -U iot_user -d iot_airquality_dev
 
 # Maintenance
-make clean           # Remove containers and volumes
-make status          # Show container status
-make health          # Check health status
+docker compose down -v            # Remove containers and volumes
+docker compose ps                 # Show container status
+docker inspect <container>        # Check health status
 ```
 
 ## 📁 Project Structure
@@ -136,12 +149,11 @@ cmu_gistnorth_iot/
 ### Docker Deployment
 
 ```bash
-# Build and deploy
-make deploy
+# Start with Docker Compose (no build needed)
+docker compose up -d
 
-# Or manually
-docker-compose build
-docker-compose up -d
+# Or use production compose
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Traditional Deployment
@@ -163,10 +175,16 @@ MIT License - see LICENSE file for details
 
 **CMU GIST North Team**
 
-## 🔗 Links
+## � Documentation
+
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Complete setup and troubleshooting guide
+- **[DOCKER.md](DOCKER.md)** - Docker commands and configuration reference
+- **[DOCKER_SIMPLIFICATION.md](DOCKER_SIMPLIFICATION.md)** - Architecture and design decisions
+- **[INSTALL.md](INSTALL.md)** - Detailed installation options
+
+## �🔗 Links
 
 - [GitHub Repository](https://github.com/dookda/cmu_gistnorth_iot)
-- [Docker Documentation](DOCKER.md)
 - [MapLibre GL JS](https://maplibre.org/)
 - [ECharts](https://echarts.apache.org/)
 - [Bootstrap](https://getbootstrap.com/)

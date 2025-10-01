@@ -25,13 +25,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Build Docker image
-      run: |
-        docker-compose build
-        
     - name: Start services
       run: |
-        docker-compose up -d
+        docker compose up -d
         
     - name: Wait for app to be ready
       run: |
@@ -50,4 +46,4 @@ jobs:
     - name: Stop services
       if: always()
       run: |
-        docker-compose down -v
+        docker compose down -v

@@ -1,11 +1,11 @@
 services:
   # Node.js Application Service
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: node:18-alpine
     container_name: cmu-iot-app
     restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npx nodemon server.js"
     ports:
       - "3000:3000"
     environment:
@@ -13,15 +13,12 @@ services:
       - PORT=3000
       - TZ=Asia/Bangkok
     volumes:
-      - ./public:/app/public
-      - ./server.js:/app/server.js
-      - ./package.json:/app/package.json
-      - ./nodemon.json:/app/nodemon.json
-      - ./node_modules:/app/node_modules
+      - ./:/app
+      - /app/node_modules
     networks:
       - iot-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
