@@ -75,6 +75,89 @@ app.get('/api/timeseries', (req, res) => {
     res.json(data);
 });
 
+// Personal air quality data endpoint (40 data points mockup)
+app.get('/api/personal', (req, res) => {
+    // Generate 40 data points with realistic air quality values
+    const now = Date.now();
+    const interval = 5 * 60 * 1000; // 5 minutes between readings
+    const data = [];
+
+    for (let i = 0; i < 40; i++) {
+        const timestamp = now - (39 - i) * interval;
+
+        // Generate realistic PM values with some variation
+        // PM1.0 is typically lower than PM2.5
+        // PM2.5 is typically lower than PM10
+        const baseValue = 15 + 20 * Math.sin(i / 5) + Math.random() * 10;
+        const pm1 = Math.max(5, baseValue - 5 + Math.random() * 5);
+        const pm25 = Math.max(8, baseValue + Math.random() * 8);
+        const pm10 = Math.max(15, pm25 + 8 + Math.random() * 12);
+
+        data.push({
+            ts: new Date(timestamp).toISOString(),
+            pm1: parseFloat(pm1.toFixed(1)),
+            pm25: parseFloat(pm25.toFixed(1)),
+            pm10: parseFloat(pm10.toFixed(1))
+        });
+    }
+
+    res.json(data);
+});
+
+// Community air quality data endpoint (40 data points mockup)
+app.get('/api/community', (req, res) => {
+    // Generate 40 data points with comprehensive air quality and environmental data
+    const now = Date.now();
+    const interval = 5 * 60 * 1000; // 5 minutes between readings
+    const data = [];
+
+    for (let i = 0; i < 40; i++) {
+        const timestamp = now - (39 - i) * interval;
+
+        // Time-based variations for realistic patterns
+        const hourOfDay = new Date(timestamp).getHours();
+        const timeEffect = Math.sin((hourOfDay - 6) / 3.8); // Peak afternoon, low morning
+
+        // Generate realistic PM values with hierarchical relationship
+        const baseValue = 18 + 15 * timeEffect + Math.random() * 12;
+        const pm1 = Math.max(3, baseValue - 8 + Math.random() * 6);
+        const pm25 = Math.max(5, baseValue + Math.random() * 10);
+        const pm4 = Math.max(8, pm25 + 3 + Math.random() * 8);
+        const pm10 = Math.max(12, pm4 + 5 + Math.random() * 15);
+
+        // VOC (Volatile Organic Compounds) - typically 0-500 ppb
+        // Higher during day, lower at night
+        const voc = Math.max(50, 150 + 100 * timeEffect + Math.random() * 80);
+
+        // NOx (Nitrogen Oxides) - typically 0-200 ppb
+        // Higher during traffic hours (morning/evening)
+        const trafficEffect = Math.abs(Math.sin((hourOfDay - 8) / 6));
+        const nox = Math.max(10, 40 + 60 * trafficEffect + Math.random() * 30);
+
+        // Temperature - realistic daily variation (20-35°C)
+        // Peak around 2-3 PM, lowest around 5-6 AM
+        const temp = 25 + 6 * Math.sin((hourOfDay - 6) / 3.8) + Math.random() * 2;
+
+        // Humidity - inverse relationship with temperature (40-85%)
+        // Higher at night, lower during day
+        const hum = 75 - 20 * Math.sin((hourOfDay - 6) / 3.8) + Math.random() * 5;
+
+        data.push({
+            ts: new Date(timestamp).toISOString(),
+            pm1: parseFloat(pm1.toFixed(1)),
+            pm25: parseFloat(pm25.toFixed(1)),
+            pm4: parseFloat(pm4.toFixed(1)),
+            pm10: parseFloat(pm10.toFixed(1)),
+            voc: parseFloat(voc.toFixed(1)),
+            nox: parseFloat(nox.toFixed(1)),
+            temp: parseFloat(temp.toFixed(1)),
+            hum: parseFloat(hum.toFixed(1))
+        });
+    }
+
+    res.json(data);
+});
+
 // Device registration endpoint
 app.post('/api/devices/register', (req, res) => {
     const {
